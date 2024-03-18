@@ -5,9 +5,12 @@ import threading
 shutdown_event = threading.Event()
 
 
-def handle_client(conn, addr, client_id):
+def handle_client(conn, addr, client_id, server_port):
     print(f"[SERVER_THREAD] Connected to CLIENT_{client_id} on {addr}")
     conn.settimeout(1.0)
+
+    if not shutdown_event.is_set():
+        conn.sendall(str(addr[1]).encode())
 
     if not shutdown_event.is_set():
         conn.sendall(str(client_id).encode())
@@ -23,7 +26,7 @@ def handle_client(conn, addr, client_id):
                 print(f"[SERVER_THREAD] Shutdown in progress. Closing connection with CLIENT_{client_id}")
                 break
             # Receive data and send it back to the client
-            print(f"[SERVER_THREAD] Received data from CLIENT_{client_id}: {data.decode()}")
+            print(f"[SERVER_THREAD] Received data from CLIENT_{client_id} on port[{server_port}] from port[{addr[1]}]: {data.decode()}")
             conn.sendall(data)
         except socket.timeout:
             continue
@@ -62,7 +65,7 @@ def main():
             # When a connection is established, increase client_counter and create a thread that handles
             # the current client
             client_counter += 1
-            client_thread = threading.Thread(target=handle_client, args=(conn, addr, client_counter))
+            client_thread = threading.Thread(target=handle_client, args=(conn, addr, client_counter, port))
             client_thread.start()
             print(f"\n[SERVER] Active connections: {threading.active_count() - 1}")
     except KeyboardInterrupt:

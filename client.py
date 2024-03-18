@@ -10,7 +10,10 @@ def main():
     # Creating the socket and connecting to the server (address)
     client_socket = socket.socket()
     client_socket.connect((host, port))
-    print(f"[CLIENT] Client connected to server on {host}:{port}.")
+    
+    # Receive server port
+    port_to_server = int(client_socket.recv(1024).decode())
+    print(f"[CLIENT] Client connected to server on {host}:{port_to_server}.")
 
     # Receive the id
     client_id = int(client_socket.recv(1024).decode())
@@ -27,7 +30,7 @@ def main():
             client_socket.sendall(data_to_send.encode())
 
             received_data = client_socket.recv(1024)
-            print(f"[CLIENT_{client_id}] Server received and sent back following data: {received_data.decode()}")
+            print(f"[CLIENT_{client_id}] Server received and sent back following data on port[{port_to_server}] from source(server) port[{port}]: {received_data.decode()}")
         except ConnectionAbortedError:
             # Handle server shutdown
             print("\n[CLIENT] Server closed down!")
